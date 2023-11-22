@@ -17,19 +17,15 @@ public class LoginInterceptor implements HandlerInterceptor {
         // 获取session
         HttpSession session = request.getSession();
         // 获取用户信息
-        Object user = session.getAttribute(USER_ATTRIBUTE);
+        Object userDTO = session.getAttribute(USER_ATTRIBUTE);
         // user是否存在
-        if (user == null) {
+        if (userDTO == null) {
             // 拦截请求，返回状态码401
             response.setStatus(401);
             return false;
         }
         // 用户存在，保存用户信息到ThreadLocal
-        User u = (User) user;
-        UserDTO userDTO = new UserDTO();
-        userDTO.setNickName(u.getNickName());
-        userDTO.setId(u.getId());
-        UserHolder.saveUser(userDTO);
+        UserHolder.saveUser((UserDTO) userDTO);
         return HandlerInterceptor.super.preHandle(request, response, handler);
     }
 

@@ -1,17 +1,21 @@
 package com.hmdp.service.impl;
 
+import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.util.RandomUtil;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.hmdp.dto.LoginFormDTO;
 import com.hmdp.dto.Result;
+import com.hmdp.dto.UserDTO;
 import com.hmdp.entity.User;
-import com.hmdp.entity.UserInfo;
 import com.hmdp.mapper.UserMapper;
 import com.hmdp.service.IUserService;
 import com.hmdp.utils.RegexUtils;
+import com.hmdp.utils.UserHolder;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 
+import javax.annotation.Resource;
 import javax.servlet.http.HttpSession;
 
 import static com.hmdp.utils.SystemConstants.*;
@@ -27,6 +31,7 @@ import static com.hmdp.utils.SystemConstants.*;
 @Slf4j
 @Service
 public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IUserService {
+    
 
     @Override
     public Result sendCode(String phone, HttpSession session) {
@@ -65,7 +70,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
             user = createUserWithPhone(phone);
         }
         // 保存用户信息到session
-        session.setAttribute(USER_ATTRIBUTE, user);
+        session.setAttribute(USER_ATTRIBUTE, BeanUtil.copyProperties(user, UserDTO.class));
         return Result.ok();
     }
 
