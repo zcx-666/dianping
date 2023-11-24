@@ -14,6 +14,8 @@ import com.hmdp.service.IUserService;
 import com.hmdp.utils.RegexUtils;
 import com.hmdp.utils.UserHolder;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.env.Environment;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 
@@ -40,6 +42,9 @@ import static com.hmdp.utils.SystemConstants.*;
 public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IUserService {
 
     @Resource
+    private Environment env;
+
+    @Resource
     private StringRedisTemplate stringRedisTemplate;
 
     @Override
@@ -54,7 +59,11 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
         stringRedisTemplate.opsForValue().set(LOGIN_CODE_KEY + phone, code, LOGIN_CODE_TTL, TimeUnit.MINUTES);
         // 发送验证码
         log.debug("向{}发送短信验证码：{}", phone, code);
-        return Result.ok();
+        if (env.getActiveProfiles()[0].equals("dev")) {
+            return Result.ok(code);
+        } else {
+            return Result.ok();
+        }
     }
 
     @Override
