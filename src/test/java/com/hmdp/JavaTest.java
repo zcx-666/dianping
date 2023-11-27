@@ -1,28 +1,13 @@
 package com.hmdp;
 
-import cn.hutool.core.bean.BeanUtil;
-import cn.hutool.json.JSON;
 import cn.hutool.json.JSONArray;
-import cn.hutool.json.JSONObject;
 import cn.hutool.json.JSONUtil;
-import com.hmdp.entity.ShopType;
-import lombok.Data;
-import lombok.experimental.Accessors;
 import org.junit.jupiter.api.Test;
 
-import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
 public class JavaTest {
-    @Data
-    @Accessors(chain = true)
-    class Student {
-        private Long id;
-        private String name = "ZCX";
-
-    }
-
 
     private List<Student> typeJSONListToList(List<String> typeListStr) {
         List<Student> res = new ArrayList<>(typeListStr.size());
