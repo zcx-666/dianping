@@ -3,6 +3,7 @@ package com.hmdp;
 import cn.hutool.json.JSONArray;
 import cn.hutool.json.JSONUtil;
 import org.junit.jupiter.api.Test;
+import org.springframework.core.io.ClassPathResource;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -30,5 +31,10 @@ public class JavaTest {
         }
         List<String> jsonList = typeListToJSON(shopTypeList);
         List<Student> typeList = typeJSONListToList(jsonList);
+    }
+
+    @Test
+    void resourceTest() {
+        ClassPathResource resource = new ClassPathResource("lua/unlock.lua");
     }
 }

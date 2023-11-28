@@ -27,7 +27,7 @@ class HmDianPingApplicationTests {
     @Resource
     private CacheClient cacheClient;
 
-    @Autowired
+    @Resource
     private Student student;
 
     @Resource
