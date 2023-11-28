@@ -73,7 +73,7 @@ public class ShopServiceImpl extends ServiceImpl<ShopMapper, Shop> implements IS
         // 2. 实现缓存重建
         // 2.1 获取互斥锁
         String lockKey = LOCK_SHOP_KEY + id;
-        Shop shop = null;
+        Shop shop;
         try {
             boolean isLock = tryLock(lockKey);
             // 2.2 判断是否获取成功
