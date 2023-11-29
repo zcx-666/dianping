@@ -5,17 +5,17 @@ import cn.hutool.core.util.BooleanUtil;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.data.redis.core.script.DefaultRedisScript;
-import org.springframework.data.redis.core.script.RedisScript;
 
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.concurrent.TimeUnit;
 
+/**
+ * 使用Lua脚本的方式实现一个简单的Redis锁，后续被Redisson分布式锁替代
+ */
 public class SimpleRedisLock implements ILock {
     private final String name;
     private final StringRedisTemplate stringRedisTemplate;
     private static final DefaultRedisScript<Long> UNLOCK_SCRIPT;
-
     private static final String KEY_PREFIX = "lock:";
 
     private static final String ID_PREFIX = UUID.randomUUID().toString(true) + "-";
@@ -47,7 +47,6 @@ public class SimpleRedisLock implements ILock {
         String threadId = ID_PREFIX + Thread.currentThread().getId();
         // 获取锁中标识
         String key = KEY_PREFIX + name;
-        String id = stringRedisTemplate.opsForValue().get(key);
         stringRedisTemplate.execute(UNLOCK_SCRIPT, Collections.singletonList(key), threadId);
     }
 }
