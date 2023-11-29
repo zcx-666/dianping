@@ -29,4 +29,6 @@ end
 redis.call('INCRBY', stockKey, -1);
 -- 下单，把用户保存到订单集合中
 redis.call('SADD', orderKey, userId);
+-- 发送消息到消息队列中，因为在VoucherOrder类中，orderId的实际对应名称为id，所以方便起见，在存的时候key设置为id
+redis.call('XADD', 'stream.orders', '*', 'userId', userId, 'voucherId', voucherId, 'id', orderId);
 return 0;
