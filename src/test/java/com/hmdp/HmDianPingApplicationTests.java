@@ -74,6 +74,7 @@ class HmDianPingApplicationTests {
 
     @Test
     void shopSaveTest() {
+        // 测试使用逻辑过期解决缓存击穿问题
         Long id = 1L;
         Shop shop = shopService.getById(id);
         cacheClient.setWithLogicExpire(RedisConstants.CACHE_SHOP_KEY + id, shop, 10L, TimeUnit.SECONDS);

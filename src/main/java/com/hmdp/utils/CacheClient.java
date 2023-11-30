@@ -103,7 +103,7 @@ public class CacheClient {
         String redisDataJSON = stringRedisTemplate.opsForValue().get(key);
         // 1.判断Redis中是否存在
         if (StrUtil.isBlank(redisDataJSON)) {
-            // 1.1 不存在，直接返回，但是正常情况这种状况不应该出现
+            // 1.1 不存在，直接返回，但是正常情况这种状况不应该出现，因为热点key会被提前加入Redis（setWithLogicExpire）
             return null;
         }
         // 1.2 存在，把JSON反序列化为对象
