@@ -1,7 +1,6 @@
 package com.hmdp.service.impl;
 
 import cn.hutool.core.bean.BeanUtil;
-import cn.hutool.core.collection.ListUtil;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.hmdp.dto.Result;
 import com.hmdp.dto.UserDTO;
@@ -27,12 +26,9 @@ import javax.annotation.PostConstruct;
 import javax.annotation.Resource;
 import java.time.Duration;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.ArrayBlockingQueue;
-import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -93,7 +89,7 @@ public class VoucherOrderServiceImpl extends ServiceImpl<VoucherOrderMapper, Vou
                     MapRecord<String, Object, Object> record = list.get(0);
                     Map<Object, Object> value = record.getValue();
                     VoucherOrder voucherOrder = BeanUtil.fillBeanWithMap(value, new VoucherOrder(), true);
-                    // 下单完成，ACK确认, SACK stream.order g1 messageId
+                    // 下单完成，ACK确认, XACK stream.order g1 messageId
                     stringRedisTemplate.opsForStream().acknowledge(queueName, "g1", record.getId());
                     handleVoucherOrder(voucherOrder);
                 } catch (Exception e) {
@@ -135,7 +131,6 @@ public class VoucherOrderServiceImpl extends ServiceImpl<VoucherOrderMapper, Vou
                 }
             }
         }
-
     }
 
     /* private BlockingQueue<VoucherOrder> orderTasks = new ArrayBlockingQueue<>(1024 * 1024);
@@ -222,7 +217,8 @@ public class VoucherOrderServiceImpl extends ServiceImpl<VoucherOrderMapper, Vou
         }
         // 执行seckill.lua完成库存和一人一单的校验，0：成功，1：库存不足，2：重复下单
         UserDTO user = UserHolder.getUser();
-        Long result = stringRedisTemplate.execute(SECKILL_SCRIPT, new ArrayList<>(), voucherId.toString(), user.getId().toString());
+        Long result = stringRedisTemplate.execute(SECKILL_SCRIPT, new ArrayList<>(), voucherId.toString(), user.getId
+        ().toString());
         // 结果判断
         int r = result.intValue();
         if (r == 1) {
@@ -294,7 +290,8 @@ public class VoucherOrderServiceImpl extends ServiceImpl<VoucherOrderMapper, Vou
             return;
         }
         // 5.扣减库存
-        boolean success = seckillVoucherService.update().setSql("stock = stock - 1").eq("voucher_id", voucherId).gt("stock", 0).update();
+        boolean success = seckillVoucherService.update().setSql("stock = stock - 1").eq("voucher_id", voucherId).gt(
+                "stock", 0).update();
         if (!success) {
             log.error("库存不足");
             return;

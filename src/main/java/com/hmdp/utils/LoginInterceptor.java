@@ -12,7 +12,7 @@ public class LoginInterceptor implements HandlerInterceptor {
     public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) throws Exception {
         // 根据ThreadLocal中是否有用户信息判断是否拦截
         if (UserHolder.getUser() == null) {
-            response.setStatus(401);
+            response.sendError(HttpServletResponse.SC_UNAUTHORIZED);
             return false;
         }
         return HandlerInterceptor.super.preHandle(request, response, handler);

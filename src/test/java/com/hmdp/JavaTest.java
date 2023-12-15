@@ -37,4 +37,15 @@ public class JavaTest {
     void resourceTest() {
         ClassPathResource resource = new ClassPathResource("lua/unlock.lua");
     }
+
+    @Test
+    void exceptionTest() throws Exception{
+        try {
+            throw new Exception();
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        } finally {
+            System.out.println(123);
+        }
+    }
 }

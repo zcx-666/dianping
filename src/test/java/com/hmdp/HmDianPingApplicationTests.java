@@ -61,6 +61,7 @@ class HmDianPingApplicationTests {
     void envTest() {
         System.out.println("Hello World!");
         log.info(env.getProperty("spring.profiles"));
+        log.info(env.getProperty("spring.redis.host"));
     }
 
     @Test
