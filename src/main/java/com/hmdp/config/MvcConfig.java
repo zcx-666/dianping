@@ -25,7 +25,8 @@ public class MvcConfig implements WebMvcConfigurer {
                         "/blog/hot",
                         "/shop/**",
                         "/shop-type/**",
-                        "/voucher/**"
+                        "/voucher/**",
+                        "/test/**"
                 ).order(1);
         WebMvcConfigurer.super.addInterceptors(registry);
     }
