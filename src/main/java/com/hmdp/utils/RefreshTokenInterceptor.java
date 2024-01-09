@@ -19,6 +19,9 @@ public class RefreshTokenInterceptor implements HandlerInterceptor {
     private StringRedisTemplate stringRedisTemplate;
 
     public RefreshTokenInterceptor(StringRedisTemplate stringRedisTemplate) {
+        // 因为在 MvcConfig 中调用 RefreshTokenInterceptor 时是手动 new 的对象，
+        // 所以这里只能通过构造函数创建对象，而不能直接通过 @Resource 获得 stringRedisTemplate 对象。
+        // 除非将本类用 @Component 注解，再在 MvcConfig 中用 @Resource 获取本类的实例
         this.stringRedisTemplate = stringRedisTemplate;
     }
 
