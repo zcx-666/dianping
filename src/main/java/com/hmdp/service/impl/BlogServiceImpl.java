@@ -155,6 +155,7 @@ public class BlogServiceImpl extends ServiceImpl<BlogMapper, Blog> implements IB
 
     @Override
     public Result saveBlog(Blog blog) {
+        // Todo: 存在bug，新关注的用户无法获得推送
         // 使用推模式实现Feed流和推送
         // 获取登录用户
         UserDTO user = UserHolder.getUser();
