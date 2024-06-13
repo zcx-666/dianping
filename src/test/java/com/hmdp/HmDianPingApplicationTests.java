@@ -6,9 +6,15 @@ import com.hmdp.utils.CacheClient;
 import com.hmdp.utils.RedisConstants;
 import com.hmdp.utils.RedisIdWorker;
 import lombok.extern.slf4j.Slf4j;
+import org.junit.Assert;
 import org.junit.jupiter.api.Test;
+import org.redisson.api.RLock;
+import org.redisson.api.RedissonClient;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.cglib.proxy.Enhancer;
 import org.springframework.core.env.Environment;
+import org.springframework.data.redis.core.StringRedisTemplate;
+import org.springframework.transaction.annotation.Transactional;
 
 import javax.annotation.Resource;
 import java.util.concurrent.CountDownLatch;
@@ -28,9 +34,6 @@ class HmDianPingApplicationTests {
 
     @Resource
     private CacheClient cacheClient;
-
-    @Resource
-    private Student student;
 
     @Resource
     private RedisIdWorker redisIdWorker;
@@ -64,20 +67,43 @@ class HmDianPingApplicationTests {
         log.info(env.getProperty("spring.redis.host"));
     }
 
+    @Resource
+    private Student resource;
+
     @Test
     void autoBeanTest() {
-        if (student == null) {
+        if (resource == null) {
             System.out.println("GG");
         } else {
             System.out.println("ok");
+            System.out.println(resource);
         }
+//        BeanTest beanTest = new BeanTest();
+//        assert beanTest.stringRedisTemplate != null : "注入失败";
     }
 
     @Test
+    @Transactional
     void shopSaveTest() {
         // 测试使用逻辑过期解决缓存击穿问题
         Long id = 1L;
         Shop shop = shopService.getById(id);
         cacheClient.setWithLogicExpire(RedisConstants.CACHE_SHOP_KEY + id, shop, 10L, TimeUnit.SECONDS);
     }
+
+
+    @Resource
+    RedissonClient redissonClient;
+
+    @Resource
+    StringRedisTemplate stringRedisTemplate;
+    @Test
+    void redisLock() {
+        RLock lock = redissonClient.getLock("sdfafsda");
+        lock.tryLock();
+        stringRedisTemplate.opsForValue().set("tt", "asd");
+        System.out.println(123);
+    }
+
+
 }

@@ -63,6 +63,7 @@ public class VoucherOrderServiceImpl extends ServiceImpl<VoucherOrderMapper, Vou
 
     @PostConstruct
     private void init() {
+        // @PostConstruct 让该方法在加载 Servlet 时运行，且只运行一次
         SECKILL_ORDER_EXECUTOR.execute(new VoucherOrderHandler());
     }
 
@@ -86,17 +87,21 @@ public class VoucherOrderServiceImpl extends ServiceImpl<VoucherOrderMapper, Vou
                         continue;
                     }
                     // 有信息，解析订单信息
-                    MapRecord<String, Object, Object> record = list.get(0);
-                    Map<Object, Object> value = record.getValue();
-                    VoucherOrder voucherOrder = BeanUtil.fillBeanWithMap(value, new VoucherOrder(), true);
-                    // 下单完成，ACK确认, XACK stream.order g1 messageId
-                    stringRedisTemplate.opsForStream().acknowledge(queueName, "g1", record.getId());
-                    handleVoucherOrder(voucherOrder);
+                    handleMassage(list);
                 } catch (Exception e) {
                     handlePendingList();
                     log.error("处理订单异常", e);
                 }
             }
+        }
+
+        private void handleMassage(List<MapRecord<String, Object, Object>> list) {
+            MapRecord<String, Object, Object> record = list.get(0);
+            Map<Object, Object> value = record.getValue();
+            VoucherOrder voucherOrder = BeanUtil.fillBeanWithMap(value, new VoucherOrder(), true);
+            // 下单完成，ACK确认, XACK stream.order g1 messageId
+            stringRedisTemplate.opsForStream().acknowledge(queueName, "g1", record.getId());
+            handleVoucherOrder(voucherOrder);
         }
 
         private void handlePendingList() {
@@ -115,12 +120,7 @@ public class VoucherOrderServiceImpl extends ServiceImpl<VoucherOrderMapper, Vou
                         break;
                     }
                     // 有信息，解析订单信息
-                    MapRecord<String, Object, Object> record = list.get(0);
-                    Map<Object, Object> value = record.getValue();
-                    VoucherOrder voucherOrder = BeanUtil.fillBeanWithMap(value, new VoucherOrder(), true);
-                    // 下单完成，ACK确认, SACK stream.order g1 messageId
-                    stringRedisTemplate.opsForStream().acknowledge(queueName, "g1", record.getId());
-                    handleVoucherOrder(voucherOrder);
+                    handleMassage(list);
                 } catch (Exception e) {
                     log.error("出现pending-list订单异常", e);
                     try {
@@ -258,7 +258,7 @@ public class VoucherOrderServiceImpl extends ServiceImpl<VoucherOrderMapper, Vou
         }
         Long userId = UserHolder.getUser().getId();
         // 创建分布式锁对象
-        // SimpleRedisLock lock = new SimpleRedisLock("order:" + userId, stringRedisTemplate);
+                    // SimpleRedisLock lock = new SimpleRedisLock("order:" + userId, stringRedisTemplate);
         RLock lock = redissonClient.getLock("lock:order:" + userId);
         // 获取锁
         boolean isLock = lock.tryLock();

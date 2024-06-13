@@ -1,6 +1,5 @@
 package com.hmdp;
 
-import cn.hutool.core.bean.BeanUtil;
 import com.hmdp.entity.Shop;
 import com.hmdp.service.IShopService;
 import org.junit.jupiter.api.BeforeEach;
@@ -12,7 +11,6 @@ import org.springframework.data.redis.core.StringRedisTemplate;
 
 import javax.annotation.Resource;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
