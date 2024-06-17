@@ -21,7 +21,19 @@ spring:
         max-idle: 10
         min-idle: 1
         time-between-eviction-runs: 10s
+  kafka:
+    producer:
+      bootstrap-servers: 127.0.0.1:9092
+      value-serializer: com.hmdp.config.kafka.KafkaSerializer
+    consumer:
+      value-deserializer: com.hmdp.config.kafka.KafkaDeserializer
+#      enable-auto-commit: false
+#    listener:
+#      ack-mode: manual
   jackson:
     default-property-inclusion: non_null # JSON处理时忽略非空字段
 mybatis-plus:
   type-aliases-package: com.hmdp.entity # 别名扫描包
+
+
+

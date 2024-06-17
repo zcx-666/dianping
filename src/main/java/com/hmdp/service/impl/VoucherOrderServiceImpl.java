@@ -19,8 +19,14 @@ import org.springframework.core.io.ClassPathResource;
 import org.springframework.data.redis.connection.stream.*;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.data.redis.core.script.DefaultRedisScript;
+import org.springframework.kafka.annotation.KafkaListener;
+import org.springframework.kafka.core.KafkaTemplate;
+import org.springframework.kafka.support.SendResult;
+import org.springframework.lang.NonNull;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.concurrent.ListenableFuture;
+import org.springframework.util.concurrent.ListenableFutureCallback;
 
 import javax.annotation.PostConstruct;
 import javax.annotation.Resource;
@@ -29,8 +35,11 @@ import java.time.LocalDateTime;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+
+import static com.hmdp.config.kafka.KafkaConfig.VOUCHER_TOPIC;
 
 /**
  * <p>
@@ -51,6 +60,8 @@ public class VoucherOrderServiceImpl extends ServiceImpl<VoucherOrderMapper, Vou
     private StringRedisTemplate stringRedisTemplate;
     @Resource
     private RedissonClient redissonClient;
+    @Resource
+    private KafkaTemplate<String, VoucherOrder> kafkaTemplate;
     private static final DefaultRedisScript<Long> SECKILL_SCRIPT;
 
     static {
@@ -64,10 +75,33 @@ public class VoucherOrderServiceImpl extends ServiceImpl<VoucherOrderMapper, Vou
     @PostConstruct
     private void init() {
         // @PostConstruct 让该方法在加载 Servlet 时运行，且只运行一次
-        SECKILL_ORDER_EXECUTOR.execute(new VoucherOrderHandler());
+//        SECKILL_ORDER_EXECUTOR.execute(new VoucherOrderHandler1());
     }
 
-    private class VoucherOrderHandler implements Runnable {
+    @KafkaListener(id = "voucherOrderHandler", topics = VOUCHER_TOPIC)
+    private void VoucherOrderHandler(VoucherOrder voucherOrder) {
+        SECKILL_ORDER_EXECUTOR.execute(() -> {
+            try {
+                handleVoucherOrder(voucherOrder);
+            } catch (Exception e) {
+                sendMessage(VOUCHER_TOPIC + ".PENDING", voucherOrder);
+                log.error("处理订单异常: {}\n", voucherOrder, e);
+            }
+        });
+    }
+
+    @KafkaListener(id = "voucherOrderHandler", topics = VOUCHER_TOPIC + ".PENDING")
+    private void PendingVoucherOrderHandler(VoucherOrder voucherOrder) {
+        SECKILL_ORDER_EXECUTOR.execute(() -> {
+            try {
+                handleVoucherOrder(voucherOrder);
+            } catch (Exception e) {
+                log.error("处理pending订单异常: {}\n", voucherOrder, e);
+            }
+        });
+    }
+
+    private class VoucherOrderHandler1 implements Runnable {
         String queueName = "stream.orders";
 
         @Override
@@ -194,15 +228,37 @@ public class VoucherOrderServiceImpl extends ServiceImpl<VoucherOrderMapper, Vou
                 String.valueOf(orderId)
         );
         // 结果判断
-        int r = result.intValue();
+//        @SuppressWarnings("ConstantConditions")
+        int r = Objects.requireNonNull(result).intValue();
         if (r == 1) {
             return Result.fail("库存不足");
         } else if (r == 2) {
             return Result.fail("请勿重复下单");
         }
+        VoucherOrder newVoucherOrder = new VoucherOrder();
+        newVoucherOrder.setUserId(user.getId());
+        newVoucherOrder.setVoucherId(voucherId);
+        newVoucherOrder.setId(orderId);
+        sendMessage(VOUCHER_TOPIC, newVoucherOrder);
         // 在主线程中获取代理对象，子线程中无法获取代理对象（通过代理对象保证事务）
         proxy = (IVoucherOrderService) AopContext.currentProxy();
         return Result.ok(orderId);
+    }
+
+    private void sendMessage(String topic, VoucherOrder voucherOrder) {
+        ListenableFuture<SendResult<String, VoucherOrder>> future = kafkaTemplate.send(topic, voucherOrder);
+        future.addCallback(new ListenableFutureCallback<SendResult<String, VoucherOrder>>() {
+            @Override
+            public void onFailure(@NonNull Throwable ex) {
+                log.error("生产者发送消息：{} 失败，原因：{}", voucherOrder.toString(), ex.getMessage());
+            }
+
+            @Override
+            public void onSuccess(SendResult<String, VoucherOrder> result) {
+                log.debug("生产者成功发送消息到" + VOUCHER_TOPIC + "-> {}", result.getProducerRecord().value().toString());
+
+            }
+        });
     }
 
     /* public Result seckillVoucher(Long voucherId) {
