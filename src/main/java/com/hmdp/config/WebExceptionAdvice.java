@@ -1,6 +1,5 @@
 package com.hmdp.config;
 
-import cn.hutool.http.HttpStatus;
 import com.hmdp.dto.Result;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.ExceptionHandler;

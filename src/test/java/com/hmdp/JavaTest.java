@@ -2,16 +2,17 @@ package com.hmdp;
 
 import cn.hutool.json.JSONArray;
 import cn.hutool.json.JSONUtil;
+import com.hmdp.dto.UserDTO;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.core.io.ClassPathResource;
 
 import java.util.ArrayList;
 import java.util.List;
-    public class JavaTest {
+
+@Slf4j
+public class JavaTest {
 
     private List<Student> typeJSONListToList(List<String> typeListStr) {
         List<Student> res = new ArrayList<>(typeListStr.size());
@@ -57,10 +58,15 @@ import java.util.List;
     void logTest() {
         Student student = Mockito.mock(Student.class);
         System.out.println(student);
-        Logger log = LoggerFactory.getLogger(this.getClass());
         log.info("log info");
         log.error("log error");
         log.debug("log debug321");
         log.trace("log trace123");
+    }
+
+    @Test
+    void classTest() {
+        Object obj = new UserDTO();
+        log.info(obj.getClass().getSimpleName());
     }
 }
